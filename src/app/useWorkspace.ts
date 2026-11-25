@@ -1,10 +1,10 @@
-import { onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import type { DominoDocument } from '@/shared/document'
 import { createDefaultDocument } from '@/shared/defaults'
 import { useLayout } from '@/features/layout'
-import { useMechanisms } from '@/features/mechanisms'
+import { normalizeConnectionOrders, useMechanisms } from '@/features/mechanisms'
 import { useScene, clampToScene } from '@/features/scene'
-import { useSimulation } from '@/features/simulation'
+import { goalBoard, useSimulation } from '@/features/simulation'
 import { useReview } from '@/features/replay'
 
 const storageKey = 'chainline-jdk032-project-v1'
@@ -15,7 +15,7 @@ function loadProject() {
     if (!saved) return createDefaultDocument()
     const parsed = JSON.parse(saved) as DominoDocument
     if (!Array.isArray(parsed.pieces) || !Array.isArray(parsed.connections) || !parsed.scene) return createDefaultDocument()
-    return parsed
+    return { ...parsed, connections: normalizeConnectionOrders(parsed) }
   } catch {
     return createDefaultDocument()
   }
@@ -37,10 +37,11 @@ export function useWorkspace() {
   }
 
   const layout = useLayout(document, changed)
-  const mechanisms = useMechanisms(document, changed)
-  const scene = useScene(document, changed)
   const simulation = useSimulation(document)
+  const mechanisms = useMechanisms(document, simulation.run, changed)
+  const scene = useScene(document, changed)
   const review = useReview(simulation.run)
+  const goals = computed(() => goalBoard(document.value, simulation.run.value))
 
   watch(document, next => {
     saveState.value = 'saving'
@@ -93,5 +94,5 @@ export function useWorkspace() {
     window.clearTimeout(saveTimer)
   })
 
-  return { document, saveState, focusPieceId, layout, mechanisms, scene, simulation, review, place, move, focusEvent }
+  return { document, saveState, focusPieceId, goals, layout, mechanisms, scene, simulation, review, place, move, focusEvent }
 }

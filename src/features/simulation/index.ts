@@ -1,3 +1,5 @@
 export { useSimulation } from './model/useSimulation'
 export { default as SimulationBar } from './ui/SimulationBar.vue'
-export { propagate } from './lib/propagate'
+export { propagate, runToSplitter, resumeRun, ORDER_GAP } from './lib/propagate'
+export { reachablePieces, previewConnectionDeletion, goalBoard } from './lib/reachability'
+export type { GoalState, GoalStatus, DeletionImpact } from './lib/reachability'

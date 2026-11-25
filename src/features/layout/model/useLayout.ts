@@ -58,10 +58,24 @@ export function useLayout(document: Ref<DominoDocument>, changed: () => void) {
 
   function remove(id: string) {
     const pieces = document.value.pieces.filter(piece => piece.id !== id)
+    const remaining = document.value.connections.filter(link => link.from !== id && link.to !== id)
+    // 删除元件可能带走某条支路，压实每个受影响来源组的 order，避免出现序号空洞
+    const affectedFrom = new Set(
+      document.value.connections
+        .filter(link => link.from === id || link.to === id)
+        .map(link => link.from),
+    )
+    const compacted = remaining.map(link => ({ ...link }))
+    for (const from of affectedFrom) {
+      const group = compacted
+        .filter(link => link.from === from)
+        .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
+      group.forEach((link, index) => { link.order = index })
+    }
     document.value = {
       ...document.value,
       pieces,
-      connections: document.value.connections.filter(link => link.from !== id && link.to !== id),
+      connections: compacted,
       startPieceId: document.value.startPieceId === id ? pieces[0]?.id ?? '' : document.value.startPieceId,
     }
     if (selectedId.value === id) selectedId.value = null

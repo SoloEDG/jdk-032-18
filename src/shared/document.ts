@@ -23,6 +23,8 @@ export interface MechanismConnection {
   to: string
   delay: number
   enabled: boolean
+  /** 同一来源下的支路启动顺序，从 0 开始 */
+  order: number
 }
 
 export interface SceneSettings {
@@ -53,15 +55,34 @@ export interface SimulationEvent {
   detail: string
 }
 
+/** 检查点上尚未处理的调度项，用于在分岔前暂停后继续 */
+export interface PendingItem {
+  pieceId: string
+  time: number
+  causeId: string | null
+  detail: string
+  /** 由哪条支路连线排入；物理接触项为 null */
+  connectionId: string | null
+}
+
 export interface SimulationRun {
   id: string
   documentId: string
   revision: number
   startedAt: number
   startPieceId: string
-  status: 'complete' | 'interrupted' | 'empty'
+  status: 'complete' | 'interrupted' | 'empty' | 'paused'
+  mode: 'full' | 'partial'
   events: SimulationEvent[]
   interruptedPieceId: string | null
   interruptionReason: string | null
   duration: number
+  /** 已实际处理过的元件 id（部分运行时构成不可重排的冻结前缀） */
+  visitedPieceIds: string[]
+  /** 已经派发过的支路连线 id，对应的支路顺序被锁定 */
+  firedConnectionIds: string[]
+  /** 暂停在某个分岔器前时，该分岔器 id；继续后清空 */
+  pausedAtPieceId: string | null
+  /** 继续运行所需的待处理队列 */
+  pending: PendingItem[]
 }

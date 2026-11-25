@@ -9,7 +9,7 @@ import { ReplayPanel } from '@/features/replay'
 import { useWorkspace } from './useWorkspace'
 
 const {
-  document, saveState, focusPieceId, layout, mechanisms, scene, simulation, review, place, move, focusEvent,
+  document, saveState, focusPieceId, goals, layout, mechanisms, scene, simulation, review, place, move, focusEvent,
 } = useWorkspace()
 const saveLabel = computed(() => saveState.value === 'saved' ? '已保存' : saveState.value === 'saving' ? '保存中' : '尚未保存')
 </script>
@@ -31,9 +31,13 @@ const saveLabel = computed(() => saveState.value === 'saved' ? '已保存' : sav
       <aside class="left-rail">
         <PiecePalette :active="layout.activeTool.value" @choose="layout.chooseTool" />
         <div class="rail-divider"></div>
-        <MechanismPanel :document="document" :from-id="mechanisms.fromId.value" :to-id="mechanisms.toId.value"
-          :message="mechanisms.message.value" @update:from-id="mechanisms.fromId.value = $event"
-          @update:to-id="mechanisms.toId.value = $event" @add="mechanisms.add" @remove="mechanisms.remove" @toggle="mechanisms.toggle" />
+        <MechanismPanel :document="document" :run="simulation.run.value"
+          :locked-connection-ids="mechanisms.lockedConnectionIds.value"
+          :pending-delete-id="mechanisms.pendingDeleteId.value" :deletion-impact="mechanisms.deletionImpact.value"
+          :from-id="mechanisms.fromId.value" :to-id="mechanisms.toId.value" :message="mechanisms.message.value"
+          @update:from-id="mechanisms.fromId.value = $event" @update:to-id="mechanisms.toId.value = $event"
+          @add="mechanisms.add" @ask-remove="mechanisms.askRemove" @cancel-remove="mechanisms.cancelRemove"
+          @confirm-remove="mechanisms.confirmRemove" @reorder="mechanisms.reorder" @toggle="mechanisms.toggle" />
         <div class="rail-divider"></div>
         <ScenePanel :scene="document.scene" @update="scene.update" />
       </aside>
@@ -47,7 +51,9 @@ const saveLabel = computed(() => saveState.value === 'saved' ? '已保存' : sav
           :run="simulation.run.value" :focus-piece-id="focusPieceId" @place="place" @select="layout.select"
           @move="move" />
         <SimulationBar :run="simulation.run.value" :stale="simulation.stale.value" :busy="simulation.busy.value"
-          :issue="simulation.issue.value" @run="simulation.simulate" @reset="simulation.clear" />
+          :issue="simulation.issue.value" :paused="simulation.paused.value"
+          @run="simulation.simulate" @reset="simulation.clear"
+          @run-to-splitter="simulation.simulateToSplitter" @continue-run="simulation.continueRun" />
         <div class="center-footer">
           <span><Cloud :size="13" /> 本机自动保存</span><span class="footer-divider">/</span>
           <span>摆放 {{ document.pieces.length }} 件 · 连线 {{ document.connections.length }} 条</span>
@@ -60,6 +66,7 @@ const saveLabel = computed(() => saveState.value === 'saved' ? '已保存' : sav
         <div class="rail-divider"></div>
         <ReplayPanel :run="simulation.run.value" :events="review.events.value" :time="review.time.value"
           :playing="review.playing.value" :current-event="review.currentEvent.value" :stale="simulation.stale.value"
+          :goals="goals"
           @toggle="review.toggle" @seek="review.seek" @restart="review.restart" @event="focusEvent" />
       </aside>
     </main>

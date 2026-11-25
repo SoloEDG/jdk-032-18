@@ -28,8 +28,8 @@ export function createDefaultDocument(): DominoDocument {
     updatedAt: Date.now(),
     pieces,
     connections: [
-      { id: 'c1', from: 's1', to: 'd7', delay: 0.15, enabled: true },
-      { id: 'c2', from: 's1', to: 'd9', delay: 0.15, enabled: true },
+      { id: 'c1', from: 's1', to: 'd7', delay: 0.15, enabled: true, order: 0 },
+      { id: 'c2', from: 's1', to: 'd9', delay: 0.15, enabled: true, order: 1 },
     ],
     scene: { gravity: 9.8, friction: 0.62, width: 21, height: 9, showGrid: true },
     startPieceId: 'd1',
